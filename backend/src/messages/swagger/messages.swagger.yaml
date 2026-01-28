@@ -1,0 +1,85 @@
+tags:
+  - name: 'Messages'
+    description: 'Messages API'
+
+components:
+  schemas:
+    DeleteMessage:
+      type: object
+      required:
+        - id
+        - userId
+        - roomId
+      properties:
+        id:
+          type: string
+        roomId:
+          type: string
+        userId:
+          type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /message/send:
+    post:
+      tags:
+        - Messages
+      summary: send message api
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                roomId:
+                  type: string
+                userId:
+                  type: string
+                file:
+                  type: string
+                  format: binary # optional file
+              required:
+                - text
+                - roomId
+                - userId
+      responses:
+        201:
+          description: 'Send Message Successfully'
+        400:
+          description: 'Bad Request'
+        500:
+          description: 'Server Internal Error'
+
+  /message/delete:
+    delete:
+      tags:
+        - Messages
+      summary: delete message
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeleteMessage'
+      responses:
+        200:
+          description: 'Delete Message Successfully'
+        400:
+          description: 'Bad Request'
+        500:
+          description: 'Server Internal Error'

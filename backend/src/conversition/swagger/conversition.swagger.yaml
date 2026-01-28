@@ -1,0 +1,137 @@
+tags:
+  - name: Conversation
+    description: Conversation API
+
+components:
+  schemas:
+    CreateConversation:
+      type: object
+      required:
+        - endpoint
+        - title
+      properties:
+        endpoint:
+          type: string
+          example: programming
+        title:
+          type: string
+          example: Nodejs
+
+    UpdateConversation:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        endpoint:
+          type: string
+          example: programming
+        title:
+          type: string
+          example: Nodejs
+    DeleteConversation:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /conv/create:
+    post:
+      tags:
+        - Conversation
+      summary: Create a conversation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConversation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateConversation'
+      responses:
+        '201':
+          description: Conversation created successfully
+        '400':
+          description: Invalid input
+        '500':
+          description: Server internal error
+
+  /conv/update:
+    put:
+      tags:
+        - Conversation
+      summary: Update a conversation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConversation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UpdateConversation'
+      responses:
+        '200':
+          description: Conversation updated successfully
+        '400':
+          description: Invalid input
+        '500':
+          description: Server internal error
+
+  /conv/delete:
+    delete:
+      tags:
+        - Conversation
+      summary: Delete a conversation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteConversation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeleteConversation'
+      responses:
+        '200':
+          description: Conversation deleted successfully
+        '400':
+          description: Invalid input
+        '500':
+          description: Server internal error
+  /conv/get/{id}:
+    get:
+      tags:
+        - Conversation
+      summary: get conversation with id and include all Rooms
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'get conversation successfully'
+        400:
+          description: 'bad Request'
+        500:
+          description: 'Server Internal Error'

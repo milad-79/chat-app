@@ -1,0 +1,103 @@
+tags:
+  - name: UserDetailes
+    description: 'User Detailes API'
+
+paths:
+  /user-detaile/create:
+    post:
+      tags:
+        - UserDetailes
+      summary: 'Create a new profile'
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - full_name
+                - file
+                - userID
+              properties:
+                full_name:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+                userID:
+                  type: string
+      responses:
+        '201':
+          description: User Detailes created successfully
+        '400':
+          description: Invalid input
+        '500':
+          description: Server Internal Error
+  /user-detaile/update:
+    put:
+      tags:
+        - UserDetailes
+      summary: 'Update Profile'
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - userID
+              properties:
+                full_name:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+                userID:
+                  type: string
+      responses:
+        '200':
+          description: User Detailes updated successfully
+        '400':
+          description: Invalid input
+        '500':
+          description: Server Internal Error
+  /user-detaile/delete:
+    delete:
+      tags:
+        - UserDetailes
+      summary: 'Delete Profile'
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeleteProfile'
+      responses:
+        '200':
+          description: User Detailes delete successfully
+        '400':
+          description: Invalid input
+        '500':
+          description: Server Internal Error
+
+components:
+  schemas:
+    DeleteProfile:
+      type: object
+      required:
+        - userID
+      properties:
+        userID:
+          type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

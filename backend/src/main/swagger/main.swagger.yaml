@@ -1,0 +1,12 @@
+openapi: '3.0.0'
+info:
+  description: 'this is swagger for chat app'
+  title: 'ChatApp'
+  version: '1.0.0'
+servers: [{ url: 'http://localhost:3000' }]
+components:
+  securitySchemes:
+    BearerAuth:
+      type: 'http'
+      scheme: 'bearer'
+      bearerFormat: 'JWT'
