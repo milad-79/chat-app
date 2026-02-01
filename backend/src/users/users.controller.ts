@@ -1,5 +1,5 @@
 import Controller from '../helper/controller';
-import { NextFunction, Response } from 'express';
+import e, { NextFunction, Response } from 'express';
 import * as Type from './types/userRegister.types';
 import {
   loginMessages,
@@ -25,10 +25,8 @@ class UserControllerClass extends Controller {
   ) {
     try {
       const payload = req.body;
-
-      console.log(payload);
-
       const token = await this.service.register(payload);
+      console.log(token);
 
       return res.status(StatusCode.StatusCodes.CREATED).json({
         StatusCode: StatusCode.StatusCodes.CREATED,
@@ -36,6 +34,8 @@ class UserControllerClass extends Controller {
         token,
       });
     } catch (error) {
+      console.log(error);
+
       next(error);
     }
   }
@@ -43,15 +43,14 @@ class UserControllerClass extends Controller {
   async login(req: ReqLoginType, res: Response, next: NextFunction) {
     try {
       const payload = req.body;
-
       const token = await this.service.login(payload);
-
       return res.status(StatusCode.StatusCodes.OK).json({
         statusCode: StatusCode.StatusCodes.OK,
         message: loginMessages.LoginSuccessfully,
         token,
       });
     } catch (error) {
+      console.log(error);
       next(error);
     }
   }

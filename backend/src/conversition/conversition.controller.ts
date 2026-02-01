@@ -23,6 +23,7 @@ class ConversitionControllerClass extends Controller {
     try {
       const file = req.file;
       const payload = { file, ...req.body };
+      
       const newConv = await this.service.createConversition(payload);
       return res.status(StatusCodes.CREATED).json({
         statusCode: StatusCodes.CREATED,
@@ -49,7 +50,8 @@ class ConversitionControllerClass extends Controller {
     next: NextFunction,
   ) {
     try {
-      const payload = { ...req.file, ...req.body };
+      const file = req.file
+      const payload = { file, ...req.body };
       const updatedConv = await this.service.updateConversition(payload);
       return res.status(StatusCodes.OK).json({
         statusCode: StatusCodes.OK,

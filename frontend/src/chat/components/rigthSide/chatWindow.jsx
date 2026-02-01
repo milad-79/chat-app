@@ -37,6 +37,8 @@ function ChatWindow({ messages = [] }) {
         </div>
 
         {messages.map((item, index) => {
+          console.log(item);
+          
           const isMine = userId === item.userId;
           const currentDate = formatDate(item.createdAt);
           const prevDate =

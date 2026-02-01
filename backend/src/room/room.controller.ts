@@ -17,9 +17,12 @@ class RoomControllerClass extends Controller {
     this.service = RoomService;
   }
   async createRoom(req: ReqCreateRoomType, res: Response, next: NextFunction) {
+    
     try {
       const fileNameUrl = req.file ? fileName(req.file) : undefined;
       const payload = { imageUrl: fileNameUrl, ...req.body };
+      console.log(payload);
+      
       const newRoom = await this.service.createRoom(payload);
       return res.status(StatusCodes.CREATED).json({
         statusCode: StatusCodes.CREATED,
@@ -27,7 +30,7 @@ class RoomControllerClass extends Controller {
         data: newRoom,
       });
     } catch (error) {
-      next(error);
+            next(error);
     }
   }
 

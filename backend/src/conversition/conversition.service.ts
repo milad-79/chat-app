@@ -10,6 +10,7 @@ import { CreadConvPayload } from './types/createConversiotion.types';
 import { Conversation } from '../generated/prisma/client';
 import { UpdateConvPayload } from './types/updateConversition.types';
 
+
 type CreateConvRes = Pick<Conversation, 'endpoint' | 'imageUrl' | 'title'> & {
   _count: {
     rooms: number;
@@ -76,6 +77,9 @@ class ConversitionServiceClass extends Controller {
       throw new BadRequest(updateConversiotionMessages.ThisGroupNotExsist);
 
     const fileUrl = file ? fileName(file) : null;
+
+    console.log(file);
+    
 
     const updatedConv = await prisma.conversation.update({
       where: {

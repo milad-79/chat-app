@@ -13,12 +13,22 @@ function RoomsPanel({ setOpen, rooms, setRooms }) {
   const [description, setDescription] = useState("");
   const [file, setFile] = useState(null);
 
-  const reduxRoom = useSelector((state) => state.room.selectedRoom);
+  const reduxRoom = useSelector((state) => state.room);
+  const convRedux = useSelector((state) => state.conversation.selectedConversation)
   const [convId, setConvId] = useState(null);
 
   const dispatch = useDispatch();
 
+  console.log(convRedux);
+  
+
   /* ------------------ EFFECTS ------------------ */
+
+  useEffect(()=>{
+    if(convRedux?.id) {
+      setConvId(convRedux.id)
+    }
+  },[convRedux])
 
   useEffect(() => {
     if (reduxRoom?.convId) {
@@ -53,13 +63,13 @@ function RoomsPanel({ setOpen, rooms, setRooms }) {
   };
 
   const submit = async () => {
-    if (!name.trim() || !convId) return;
-
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
     formData.append("convId", convId);
     if (file) formData.append("file", file);
+
+    
 
     try {
       let res;
@@ -80,7 +90,6 @@ function RoomsPanel({ setOpen, rooms, setRooms }) {
 
       resetForm();
     } catch (err) {
-      console.log("sss");
       console.error("Room submit failed", err);
     }
   };

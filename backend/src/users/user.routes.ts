@@ -5,7 +5,7 @@ import {
   usernameSchema,
   registerUserSchema,
 } from './validator/users.validators';
-import { loginUserSchema } from './validator/login.validators';
+
 import { logoutSchema } from './validator/logout.validators';
 import { CheckAuthentication } from './../auth/middlewares/authentication.middleware';
 
@@ -17,7 +17,7 @@ router.post(
   UserController.registerUser,
 );
 
-router.post('/login', validateBody(loginUserSchema), UserController.login);
+router.post('/login', validateBody(registerUserSchema), UserController.login);
 
 router.post(
   '/logout',

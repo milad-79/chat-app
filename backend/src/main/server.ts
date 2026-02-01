@@ -25,7 +25,7 @@ const swaggerOptions = {
 };
 
 class Application {
-  private app: Express;
+  public app: Express;
   private port: number;
   constructor() {
     this.app = app;

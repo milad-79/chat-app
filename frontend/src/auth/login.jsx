@@ -135,7 +135,12 @@ const LoginPage = () => {
           )}
         </Formik>
 
-        <a href="/singup">SingUp</a>
+        <p className="mt-2">
+          Have Account
+          <a href="/singup" className="p-1 text-green-700 hover:text-green-500">
+            SingUp
+          </a>
+        </p>
 
         {/* Footer */}
         <p className="text-center text-gray-400 text-xs mt-6">

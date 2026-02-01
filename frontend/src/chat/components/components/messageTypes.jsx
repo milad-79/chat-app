@@ -1,7 +1,7 @@
 import React from "react";
 import AudioMessage from "./audioMessage";
 import ImageCompenent from "./imageMessage";
-import AvatarCompenet from "./avatarComponent";
+import AvatarMessage from "./avatarMessage";
 import { getUserColor } from "../helper/getColor";
 import { BsCheckLg, BsCheckAll } from "react-icons/bs";
 
@@ -21,11 +21,14 @@ function MessageBubble({ info, isMine }) {
   const imageFile = info.files?.find((f) => f.type?.startsWith("image"));
   const username = info.user?.username || "Unknown";
 
+  console.log(info);
+  
+
   return (
     <div
       className={`flex mb-2 gap-1 ${isMine ? "justify-end" : "items-start"}`}
     >
-      {!isMine && <AvatarCompenet user={info.user} />}
+      {!isMine && <AvatarMessage info={info} />}
 
       <div
         className={`flex flex-col rounded-md py-2 px-3 ${!isMine ? "ml-2" : ""}`}

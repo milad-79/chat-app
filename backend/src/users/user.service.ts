@@ -1,7 +1,7 @@
 import prisma from '../configs/prisma.config';
 import Controller from '../helper/controller';
 import { UserPayloadType } from './types/userRegister.types';
-import { BadRequest, NotFound } from 'http-errors';
+import { BadRequest } from 'http-errors';
 import {
   getUserWithUserNameMessages,
   loginMessages,
@@ -90,6 +90,7 @@ class UserServiceClass extends Controller {
       },
       data: {
         token: '',
+        isOnline: false,
       },
     });
   }

@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import prisma from '../../configs/prisma.config';
 import Controller from '../../helper/controller';
 
-const typingUsers = new Map<string, Set<string>>();
+const typingUsers = new Map<string, Set<string>>(); // key: `${endpoint}:${roomName}`
 
 export class NamespaceSocketHandler extends Controller {
   private io: Server;
@@ -18,14 +18,8 @@ export class NamespaceSocketHandler extends Controller {
   initConnection() {
     this.io.on('connection', async (socket) => {
       const namespaces = await prisma.conversation.findMany({
-        select: {
-          title: true,
-          endpoint: true,
-          rooms: true,
-        },
-        orderBy: {
-          id: 'desc',
-        },
+        select: { title: true, endpoint: true, rooms: true },
+        orderBy: { id: 'desc' },
       });
 
       socket.emit('namespacesList', namespaces);
@@ -42,7 +36,9 @@ export class NamespaceSocketHandler extends Controller {
     });
 
     for (const namespace of namespaces) {
-      this.io.of(`/${namespace.endpoint}`).on('connection', async (socket) => {
+      const nsp = this.io.of(`/${namespace.endpoint}`);
+
+      nsp.on('connection', async (socket) => {
         const conversation = await prisma.conversation.findFirst({
           where: { endpoint: namespace.endpoint },
           select: { endpoint: true, rooms: true },
@@ -55,35 +51,82 @@ export class NamespaceSocketHandler extends Controller {
 
         socket.emit('roomList', conversation.rooms);
 
+        // =======================
+        // JOIN ROOM
+        // =======================
         socket.on('joinRoom', async ({ roomName, username }) => {
           socket.data.username = username;
 
-          // leave previous room
-          const lastRoom = Array.from(socket.rooms)[1];
-          if (lastRoom) {
-            socket.leave(lastRoom);
-            await this.getCountOfOnlineUsers(namespace.endpoint, lastRoom);
+          // Leave all previous rooms
+          const oldRooms = Array.from(socket.rooms).filter(
+            (r) => r !== socket.id,
+          );
+          for (const r of oldRooms) {
+            await this.removeUserFromRoom(socket, namespace.endpoint, r);
           }
 
+          // Join new room
           socket.join(roomName);
+          socket.data.currentRoom = roomName;
+
           await this.getCountOfOnlineUsers(namespace.endpoint, roomName);
 
-          const roomInfo = conversation.rooms.find(
-            (item) => item.name === roomName,
-          );
-
+          const roomInfo = conversation.rooms.find((r) => r.name === roomName);
           socket.emit('roomInfo', roomInfo);
 
-          this.getNewMessage(socket);
-          this.handleTyping(socket);
+          this.getNewMessage(socket, namespace.endpoint);
+          this.handleTyping(socket, namespace.endpoint);
+        });
 
-          socket.on('disconnect', async () => {
-            this.cleanupTypingOnDisconnect(socket);
-            await this.getCountOfOnlineUsers(namespace.endpoint, roomName);
-          });
+        // =======================
+        // LEAVE ROOM (fully remove user from room & typing)
+        // =======================
+        socket.on('leaveRoom', async ({ roomName }) => {
+          if (!roomName) return;
+          await this.removeUserFromRoom(socket, namespace.endpoint, roomName);
+        });
+
+        // =======================
+        // DISCONNECT (remove user from all rooms in this namespace)
+        // =======================
+        socket.on('disconnect', async () => {
+          const username = socket.data.username;
+          if (!username) return;
+
+          const rooms = Array.from(socket.rooms).filter((r) => r !== socket.id);
+          for (const r of rooms) {
+            await this.removeUserFromRoom(socket, namespace.endpoint, r);
+          }
         });
       });
     }
+  }
+
+  // =======================
+  // REMOVE USER FROM ROOM & CLEANUP
+  // =======================
+  private async removeUserFromRoom(
+    socket: Socket,
+    endpoint: string,
+    roomName: string,
+  ) {
+    const username = socket.data.username;
+    if (!username) return;
+
+    socket.leave(roomName);
+
+    // Remove typing
+    const key = `${endpoint}:${roomName}`;
+    if (typingUsers.has(key)) {
+      typingUsers.get(key)!.delete(username);
+      if (typingUsers.get(key)!.size === 0) typingUsers.delete(key);
+      socket.to(roomName).emit('typingUsers', {
+        users: typingUsers.has(key) ? Array.from(typingUsers.get(key)!) : [],
+      });
+    }
+
+    // Update online users count
+    await this.getCountOfOnlineUsers(endpoint, roomName);
   }
 
   // =======================
@@ -98,24 +141,21 @@ export class NamespaceSocketHandler extends Controller {
   // =======================
   // MESSAGES
   // =======================
-  getNewMessage(socket: Socket) {
-    socket.on('newMessage', async (data) => {
-      const { roomName, endpoint } = data;
+  getNewMessage(socket: Socket, endpoint: string) {
+    socket.on('newMessage', (data) => {
+      const roomName = socket.data.currentRoom;
+      if (!roomName) return;
       this.io.of(`/${endpoint}`).in(roomName).emit('confirmMessage', data);
     });
   }
 
   // =======================
-  // TYPING INDICATOR (MULTI USER)
+  // TYPING INDICATOR
   // =======================
-  handleTyping(socket: Socket) {
-    socket.on('typing', ({ endpoint, roomName, username }) => {
+  handleTyping(socket: Socket, endpoint: string) {
+    socket.on('typing', ({ roomName, username }) => {
       const key = `${endpoint}:${roomName}`;
-
-      if (!typingUsers.has(key)) {
-        typingUsers.set(key, new Set());
-      }
-
+      if (!typingUsers.has(key)) typingUsers.set(key, new Set());
       typingUsers.get(key)!.add(username);
 
       socket.to(roomName).emit('typingUsers', {
@@ -123,37 +163,16 @@ export class NamespaceSocketHandler extends Controller {
       });
     });
 
-    socket.on('stopTyping', ({ endpoint, roomName, username }) => {
+    socket.on('stopTyping', ({ roomName, username }) => {
       const key = `${endpoint}:${roomName}`;
-
       if (typingUsers.has(key)) {
         typingUsers.get(key)!.delete(username);
-
-        if (typingUsers.get(key)!.size === 0) {
-          typingUsers.delete(key);
-        }
+        if (typingUsers.get(key)!.size === 0) typingUsers.delete(key);
       }
 
       socket.to(roomName).emit('typingUsers', {
         users: typingUsers.has(key) ? Array.from(typingUsers.get(key)!) : [],
       });
-    });
-  }
-
-  // =======================
-  // CLEANUP ON DISCONNECT
-  // =======================
-  cleanupTypingOnDisconnect(socket: Socket) {
-    const username = socket.data.username;
-    if (!username) return;
-
-    typingUsers.forEach((users, key) => {
-      if (users.delete(username)) {
-        const [, roomName] = key.split(':');
-        socket.to(roomName).emit('typingUsers', {
-          users: Array.from(users),
-        });
-      }
     });
   }
 }

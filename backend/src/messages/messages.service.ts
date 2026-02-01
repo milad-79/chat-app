@@ -82,7 +82,7 @@ class MessagesServiceClass extends Controller {
         text: true,
         userId: true,
         user: {
-          select: { username: true },
+          select: { username: true, details: {select: {imageUrl: true}} },
         },
         files: {
           select: {
